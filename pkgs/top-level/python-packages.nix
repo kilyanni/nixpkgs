@@ -1132,6 +1132,8 @@ self: super: with self; {
 
   async-stagger = callPackage ../development/python-modules/async-stagger { };
 
+  async-substrate-interface = callPackage ../development/python-modules/async-substrate-interface { };
+
   async-tiff = callPackage ../development/python-modules/async-tiff { };
 
   async-timeout = callPackage ../development/python-modules/async-timeout { };
