@@ -26,6 +26,7 @@ source @out@/nix-support/darwin-sdk-setup.bash
 dontLink=0
 nonFlagArgs=0
 cc1=0
+isOffload=0
 # shellcheck disable=SC2193
 [[ "@prog@" = *++ ]] && isCxx=1 || isCxx=0
 cxxInclude=1
@@ -50,10 +51,12 @@ while (( "$n" < "$nParams" )); do
         -nostdlib) cxxLibrary=0 ;;
         -x*-header) dontLink=1 ;; # both `-x c-header` and `-xc-header` are accepted by clang
         -xc++*) isCxx=1 ;;        # both `-xc++` and `-x c++` are accepted by clang
+        -xcuda | -xhip | -fsycl | -fsycl-* | -fopenmp-targets=* | --offload=* | --offload-arch=* | --cuda-gpu-arch=*) isOffload=1 ;;
         -x)
             case "$p2" in
                 *-header) dontLink=1 ;;
                 c++*) isCxx=1 ;;
+                cuda | hip) isOffload=1 ;;
             esac
             ;;
         --) # Everything else is positional args!
@@ -68,6 +71,7 @@ while (( "$n" < "$nParams" )); do
             break;
             ;;
         -?*) ;;
+        *.cu | *.hip) nonFlagArgs=1 isOffload=1 ;;
         *) nonFlagArgs=1 ;; # Includes a solitary dash (`-`) which signifies standard input; it is not a flag
     esac
 done

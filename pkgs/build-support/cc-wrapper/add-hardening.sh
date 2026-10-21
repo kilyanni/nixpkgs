@@ -87,6 +87,13 @@ if (( "${NIX_DEBUG:-0}" >= 1 )); then
   fi
 fi
 
+# Device targets of offloading compilers reject these flags, or, for fortify,
+# emit calls to __*_chk functions no device library provides.
+hostOnly=
+if (( isOffload )) && (( @isClang@ )); then
+  hostOnly=-Xarch_host
+fi
+
 for flag in "${!hardeningEnableMap[@]}"; do
   case $flag in
     fortify | fortify3)
@@ -100,11 +107,11 @@ for flag in "${!hardeningEnableMap[@]}"; do
       case $flag in
         fortify)
           if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling fortify >&2; fi
-          hardeningCFlagsAfter+=('-D_FORTIFY_SOURCE=2')
+          hardeningCFlagsAfter+=($hostOnly '-D_FORTIFY_SOURCE=2')
         ;;
         fortify3)
           if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling fortify3 >&2; fi
-          hardeningCFlagsAfter+=('-D_FORTIFY_SOURCE=3')
+          hardeningCFlagsAfter+=($hostOnly '-D_FORTIFY_SOURCE=3')
         ;;
         *)
           # Ignore unsupported.
@@ -113,7 +120,7 @@ for flag in "${!hardeningEnableMap[@]}"; do
       ;;
     shadowstack)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling shadowstack >&2; fi
-      hardeningCFlagsBefore+=('-fcf-protection=return')
+      hardeningCFlagsBefore+=($hostOnly '-fcf-protection=return')
       ;;
     strictflexarrays1)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling strictflexarrays1 >&2; fi
@@ -125,7 +132,7 @@ for flag in "${!hardeningEnableMap[@]}"; do
       ;;
     pacret)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling pacret >&2; fi
-      hardeningCFlagsBefore+=('-mbranch-protection=pac-ret')
+      hardeningCFlagsBefore+=($hostOnly '-mbranch-protection=pac-ret')
       ;;
     glibcxxassertions)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling glibcxxassertions >&2; fi
@@ -179,7 +186,7 @@ for flag in "${!hardeningEnableMap[@]}"; do
       ;;
     zerocallusedregs)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling zerocallusedregs >&2; fi
-      hardeningCFlagsBefore+=('-fzero-call-used-regs=used-gpr')
+      hardeningCFlagsBefore+=($hostOnly '-fzero-call-used-regs=used-gpr')
       ;;
     *)
       # Ignore unsupported. Checked in Nix that at least *some*

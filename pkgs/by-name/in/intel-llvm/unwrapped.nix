@@ -345,8 +345,7 @@ stdenv.mkDerivation (finalAttrs: {
 
     inherit llvmMajorVersion;
 
-    # This hardening option causes compilation errors when compiling for amdgcn, spirv and others
-    hardeningUnsupportedFlags = [ "zerocallusedregs" ];
+    inherit (llvmPackages_22.clang-unwrapped) hardeningUnsupportedFlagsByTargetPlatform;
   };
 
   meta = {

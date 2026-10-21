@@ -343,6 +343,28 @@ nameDrvAfterAttrName (
         }
     );
 
+    offloadDeviceJobSkipsHostOnlyFlags = brokenIf (!stdenv.cc.isClang) (
+      overridePlatforms [ "x86_64-linux" ] (
+        runCommandWith
+          {
+            name = "offload-host-only-flags-test";
+            inherit stdenv;
+            derivationArgs.hardeningEnable = [
+              "fortify"
+              "shadowstack"
+              "zerocallusedregs"
+            ];
+          }
+          ''
+            echo '__attribute__((global)) void k(int *p) { *p = 0; }' > k.hip
+            flags=(-x hip --offload-arch=gfx1030 -nogpulib -nogpuinc k.hip)
+            $CXX "''${flags[@]}" --cuda-device-only -S -o k.s
+            $CXX "''${flags[@]}" -c -### 2>&1 | grep -- '"-triple" "x86_64' | grep -q -- -fzero-call-used-regs=used-gpr
+            touch $out
+          ''
+      )
+    );
+
     fortify1ExplicitEnabledExecTest = fortifyExecTest (
       f1exampleWithStdEnv stdenv {
         hardeningEnable = [ "fortify" ];
